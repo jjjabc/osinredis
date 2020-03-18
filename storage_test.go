@@ -98,6 +98,16 @@ func TestGetClientNotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, clientFound)
 }
+func TestListClientIds(t *testing.T)  {
+	flushAll()
+
+	storage := initTestStorage()
+	client := newClient()
+	assert.NoError(t, storage.CreateClient(client))
+	ids,err:=storage.ListClientIds()
+	assert.NoError(t,err)
+	assert.Equal(t,ids,[]string{client.Id})
+}
 
 func TestUpdateClient(t *testing.T) {
 	flushAll()
@@ -162,6 +172,7 @@ func TestLoadAuthorize(t *testing.T) {
 
 	loadData, err := storage.LoadAuthorize(authorizeData.Code)
 	assert.NoError(t, err)
+	authorizeData.CreatedAt=authorizeData.CreatedAt.Round(0)
 	assert.True(t, reflect.DeepEqual(loadData, authorizeData))
 }
 
@@ -234,6 +245,9 @@ func TestLoadAccess(t *testing.T) {
 	assert.NotEqual(t, loadData.ExpiresIn, accessData.ExpiresIn)
 
 	loadData.ExpiresIn = accessData.ExpiresIn
+	accessData.CreatedAt=accessData.CreatedAt.Round(0)
+	accessData.AuthorizeData.CreatedAt=accessData.AuthorizeData.CreatedAt.Round(0)
+	//assert.True(t, reflect.DeepEqual(loadData, accessData))
 	assert.Equal(t, loadData, accessData)
 	assert.NoError(t, err)
 }
@@ -293,6 +307,8 @@ func TestLoadRefresh(t *testing.T) {
 
 	loadData, err := storage.LoadRefresh(accessData.RefreshToken)
 	assert.NoError(t, err)
+	accessData.CreatedAt=accessData.CreatedAt.Round(0)
+	accessData.AuthorizeData.CreatedAt=accessData.AuthorizeData.CreatedAt.Round(0)
 	assert.Equal(t, loadData, accessData)
 }
 

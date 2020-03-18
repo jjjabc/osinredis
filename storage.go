@@ -61,6 +61,34 @@ func (s *Storage) CreateClient(client osin.Client) error {
 	return errors.Wrap(err, "failed to save client")
 }
 
+// ListClientIds gets all clients id
+func (s *Storage) ListClientIds() ([]string,error) {
+	conn := s.pool.Get()
+	if err := conn.Err(); err != nil {
+		return nil, err
+	}
+
+	defer conn.Close()
+
+	var (
+		rawClientKeys interface{}
+		err error
+	)
+	if rawClientKeys, err = conn.Do("KEYS", s.makeKey("client", "*")); err != nil {
+		return nil, errors.Wrap(err, "unable to List client ids")
+	}
+	if rawClientKeys == nil{
+		return nil,nil
+	}
+	clientKeys,_:=redis.Strings(rawClientKeys,err)
+	ids:=make([]string,len(clientKeys))
+	prefixLen:=len(s.makeKey("client",""))
+	for i,key:=range clientKeys  {
+		ids[i]=key[prefixLen:]
+	}
+	return ids,nil
+}
+
 // GetClient gets a client by ID
 func (s *Storage) GetClient(id string) (osin.Client, error) {
 	conn := s.pool.Get()
